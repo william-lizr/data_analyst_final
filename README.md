@@ -10,8 +10,8 @@ Ingests raw survey data (`.sav` or `.csv`) and outputs two deliverables:
 
 ```bash
 # 1. Clone the repo
-git clone <link to be supplied>
-cd <repo-name>
+git clone https://github.com/william-lizr/data_analyst_final.git
+cd data_analyst_final
 
 # 2. Create a virtual environment
 python -m venv venv
