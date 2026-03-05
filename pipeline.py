@@ -26,36 +26,22 @@ os.makedirs(output_dir, exist_ok=True)
 ############################################################
 
 if input_path.endswith(".sav"):
-    # apply_value_formats=False keeps raw numeric codes in the dataframe.
-    # We apply value labels ourselves via value_label_map so no information
-    # is lost, and we avoid pyreadstat silently coercing string values such
-    # as "None", "NA", or "nan" into NaN when they are legitimate responses.
+
     df, meta = pyreadstat.read_sav(
         input_path,
         apply_value_formats=False,
     )
 else:
-    # keep_default_na=False stops pandas converting strings like "None",
-    # "NA", "nan", "N/A" etc. into NaN — those are legitimate response texts.
-    # na_values=[""] re-adds the only case we do want: a completely empty
-    # cell (two adjacent delimiters with nothing between them) → NaN.
+
     df = pd.read_csv(input_path, keep_default_na=False, na_values=[""])
     meta = None
 
 df.columns = df.columns.str.strip()
 
-# Convert exact empty strings in string columns to NaN.
-# We do this column-by-column on object dtype only, targeting only the
-# literal empty string "".  This deliberately excludes "None", "NA", "nan"
-# and any other string — those are valid response texts and must not be
-# silently treated as missing.
 _str_cols = df.select_dtypes(include=["object", "str"]).columns
 for _col in tqdm(_str_cols, desc="Cleaning empty strings", unit="col"):
     df[_col] = df[_col].replace("", np.nan)
 
-# Build a variable-name → human label map from SAV metadata.
-# Falls back to the variable name itself when no label is present.
-# For CSV files meta is None so the map just echoes column names.
 def build_label_map(columns, meta):
     if meta is not None and hasattr(meta, "column_names_to_labels"):
         return {
@@ -69,7 +55,7 @@ col_label_map = build_label_map(df.columns, meta)
 label_to_col_map = {v: k for k, v in col_label_map.items()}
 def build_value_label_map(meta):
     if meta is not None and hasattr(meta, "variable_value_labels"):
-        # pyreadstat keys are floats; convert to str to match our string-cast convention
+        
         return {
             var: {str(k): str(v) for k, v in labels.items()}
             for var, labels in meta.variable_value_labels.items()
@@ -97,7 +83,7 @@ original_missing = df.isna()
 
 def build_measure_map(meta):
     if meta is not None and hasattr(meta, "variable_measure"):
-        return dict(meta.variable_measure)  # {varname: 'scale'|'nominal'|'ordinal'|'unknown'}
+        return dict(meta.variable_measure)  
     return {}
 
 variable_measure = build_measure_map(meta)
@@ -502,7 +488,6 @@ else:
 # CHECK 2: Column count
 # ----------------------------------------------------------
 
-# Same counting logic for both SAV and CSV: multi-select expands, everything else = 1 column
 expected_encoded_cols = 0
 for col in df.columns:
     values = df[col].dropna().astype(str)
@@ -713,15 +698,14 @@ else:
 print(f"\n  Straight-lining (respondents giving identical answers across all single-choice questions)")
 
 sc_encoded = encoded[[c for c in sc_cols if c in encoded.columns]]
-# Only consider rows with at least 5 valid (non -1) SC answers
+
 valid_sc_mask = (sc_encoded != -1)
 valid_counts  = valid_sc_mask.sum(axis=1)
 candidate_rows = sc_encoded[valid_counts >= 5]
 valid_mask_cand = valid_sc_mask[valid_counts >= 5]
 
 def is_straightline(row, mask):
-    # mask.loc[row.name] gives the boolean Series for this respondent row;
-    # row[bool_series] then selects only the valid (non -1) answer columns.
+    
     bool_mask = mask.loc[row.name]
     vals = row[bool_mask]
     if len(vals) < 5:
