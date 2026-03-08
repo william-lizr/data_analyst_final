@@ -1,10 +1,13 @@
-# ── Survey Response Encoding Pipeline — Config ───────────────────────────────
+
+# ── Survey Response Encoding Pipeline config ───────────────────────────────
 
 # Path to input file (.sav or .csv)
-input_path: "data/"
+# input_path: "data/"
+input_path: "data/dataset_2_china.sav"
+# input_path: "data/dataset_1.csv"
 
 # Directory where outputs are written
 output_dir: "output"
 
-# Number of rows sampled for the row-level recovery check (Check 4)
-validation_backcheck_rows: 50
+# Number of rows reconstructed for the row-level recovery check (check number 4)
+validation_backcheck_rows: 500

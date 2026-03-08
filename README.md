@@ -6,6 +6,17 @@ Ingests raw survey data (`.sav` or `.csv`) and outputs two deliverables:
 - `encoded_response_matrix.csv` — integer matrix, one row per respondent, one column per question/sub-option, indexed by `respondent_id`
 - `lookup_table.csv` — codebook mapping every encoded integer back to its question text and response label
 
+### Important points:
+- Ranked columns were not included for the following reasons:
+  - example `.csv` did not contain ranked columns -> no encoding schema
+  - example `.sav` did not contain ranked columns -> no encoding schema
+  - `instructions.md` did not contain ranked columns -> no encoding schema
+- the `natural_language_map` and `response_text_proc` columns aren't processed strictly
+  - `natural_language_map` => copy of `question_text_proc`
+  - `response_text_proc` => copy of `response_text`
+
+- missing values are replaced with a sentinel value `-1` in the final encoded matrix
+
 ## Setup & Running
 
 ```bash
