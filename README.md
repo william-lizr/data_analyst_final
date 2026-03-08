@@ -63,6 +63,7 @@ Terminal output shows a progress bar for each stage, followed by validation resu
 - `meta.variable_measure` takes priority over heuristics for column classification — variables with value labels or measure `nominal`/`ordinal` are never classified as `free_text`
 - `apply_value_formats=False` is passed to `pyreadstat` to prevent silent coercion of strings like `"None"` or `"NA"` to NaN
 - Empty strings `""` are treated as missing; all other strings (including `"None"`, `"NA"`) are treated as valid response text
+- `multi_select` columns are detected using the `mr_sets` attribute of the `meta` object
 
 ### CSV
 - Column headers are used as question text directly
