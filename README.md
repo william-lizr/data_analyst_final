@@ -122,11 +122,11 @@ One loop over all columns classifies each column and appends rows to the lookup 
 
 **Column types (evaluated in order):**
 
-| Type | Rule |
-|---|---|
-| `multi_select` | Any cell contains `\|` |
+| Type | Rule                                                                                                    |
+|---|---------------------------------------------------------------------------------------------------------|
+| `multi_select` | Any cell contains `\|` (if `.csv`)  or in `mr_sets` (if `.sav`)                                             |
 | `free_text` | ≥20 unique values AND ≥50% unique; SAV: excluded if value labels or `nominal`/`ordinal` measure present |
-| `single_choice` | Everything else |
+| `single_choice` | Everything else                                                                                         |
 
 **Code assignment:**
 - Label contains `?` → `Q` prefix (survey question)
