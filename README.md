@@ -75,6 +75,8 @@ Terminal output shows a progress bar for each stage, followed by validation resu
 
 - missing values are replaced with a sentinel value `-1` in the final encoded matrix
 
+- `source_varname` is retained internally during the pipeline run for validation
+  and missing-value tracking, but is **dropped from the exported `lookup_table.csv`**
 
 ## Assumptions used:
 
@@ -118,7 +120,6 @@ Printed after validation:
 | Columns with high missingness | >50% missing |
 | Respondents with high missingness | >50% of questions missing |
 | Response dominance | one answer >95% of valid responses |
-| Straight-lining | respondent gave identical answer to all SC questions |
 | Duplicate rows | any exact duplicate response pattern |
 | Lookup / matrix sync | any orphaned codes on either side |
 | Question type breakdown | count per type |
@@ -163,6 +164,8 @@ Three passes accumulate columns into a `dict`, then joined once with `pd.concat`
 - **Single choice** — map response text to integer codes via lookup (SAV: numeric codes translated through `value_label_map` first)
 
 Column order: `A` ascending, then `Q` ascending.
+
+- `parent_question_code` is lowercased (e.g. `Q1` → `q1`, `A2` → `a2`) to match the example table given in `instruction.md`
 
 ### 6. Apply missing policy
 `-1` stamped onto all cells that were originally `NaN` (per `original_missing`). Remaining `NaN` filled with `0`. Matrix cast to `int`.
