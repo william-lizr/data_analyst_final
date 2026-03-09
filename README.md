@@ -2,22 +2,31 @@
 
 ## Overview
 
-Ingests raw survey data (`.sav` or `.csv`) and outputs two deliverables:
-- `encoded_response_matrix.csv` — integer matrix, one row per respondent, one column per question/sub-option, indexed by `respondent_id`
-- `lookup_table.csv` — codebook mapping every encoded integer back to its question text and response label
+Input:  
+- Raw survey data (`.sav` or `.csv`)
 
-### Important points:
-- Ranked columns were not included for the following reasons:
-  - example `.csv` did not contain ranked columns -> no encoding schema
-  - example `.sav` did not contain ranked columns -> no encoding schema
-  - `instructions.md` did not contain ranked columns -> no encoding schema
-- the `natural_language_map` and `response_text_proc` columns aren't processed strictly
-  - `natural_language_map` => copy of `question_text_proc`
-  - `response_text_proc` => copy of `response_text`
+Output:  
+- `encoded_response_matrix.csv` - matrix of integers, one row per respondent, one column per question/sub-option, indexed by `respondent_id`
+- `lookup_table.csv` — lookup table mapping:
+  - column name back to its question text (column name, e.g. `Q14`, `A2` -> `question text string`)
+  - response label (`integer` -> `response string`)
 
-- missing values are replaced with a sentinel value `-1` in the final encoded matrix
+## Project structure:  
 
-## Setup & Running
+```
+data_analyst_final/
+├── data/                          # Input data folder (place .sav or .csv here)
+├── output/                        # Generated outputs
+│   ├── encoded_response_matrix.csv  # deliverable 1 (not yet generated)
+│   └── lookup_table.csv             # deliverable 2 (not yet generated)
+├── .gitignore
+├── README.md
+├── config.yaml                    # Pipeline configuration (input path, output dir, number of validation samples)
+├── pipeline.py                    # Main pipeline script
+└── requirements.txt               # Python dependencies for venv
+```
+
+## How to set up and run:
 
 ```bash
 # 1. Clone the repo
@@ -55,7 +64,19 @@ Terminal output shows a progress bar for each stage, followed by validation resu
 
 ---
 
-## Assumptions
+### Important points:
+- Ranked columns were not included for the following reasons:
+  - example `.csv` did not contain ranked columns -> no encoding schema
+  - example `.sav` did not contain ranked columns -> no encoding schema
+  - `instructions.md` did not contain ranked columns -> no encoding schema
+- the `natural_language_map` and `response_text_proc` columns aren't processed strictly
+  - `natural_language_map` => copy of `question_text_proc`
+  - `response_text_proc` => copy of `response_text`
+
+- missing values are replaced with a sentinel value `-1` in the final encoded matrix
+
+
+## Assumptions used:
 
 ### SAV
 - Column names are SPSS variable names (e.g. `var48`); human-readable question text comes from `meta.column_names_to_labels`
