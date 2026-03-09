@@ -3,8 +3,8 @@
 
 # Path to input file (.sav or .csv)
 # input_path: "data/"
-input_path: "data/dataset_2_china.sav"
-# input_path: "data/dataset_1.csv"
+# input_path: "data/dataset_2_china.sav"
+input_path: "data/dataset_1.csv"
 
 # Directory where outputs are written
 output_dir: "output"

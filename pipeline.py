@@ -359,7 +359,7 @@ for col in tqdm(df.columns, desc="Building lookup", unit="col"):
             1 for r in lookup_rows
             if r.get("parent_question_code") == parent_code and r.get("response_code") == 1
         )
-        question_code = f"{parent_code}_R{n_existing}"
+        question_code = f"{parent_code}_R{n_existing + 1}"
 
         lookup_rows.append({
             "question_text": f"{question_code} {group_question_text}",
@@ -403,7 +403,7 @@ for col in tqdm(df.columns, desc="Building lookup", unit="col"):
         )
 
         for i, opt in enumerate(sorted(options), start=0):
-            question_code = f"{parent_code}_R{i}"
+            question_code = f"{parent_code}_R{i+1}"
 
             lookup_rows.append({
                 "question_text": f"{question_code} {question_text_proc}",
