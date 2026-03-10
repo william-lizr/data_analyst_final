@@ -144,26 +144,9 @@ def _looks_binary(series, val_labels):
     vals = _resolved_values(series, val_labels)
     return 0 < len(vals) <= 4
 
-
 def build_multi_select_groups(df, meta, col_label_map, value_label_map):
-    """
-    Three-pass detection of multi-select column groups for SAV files.
-
-    Pass 1 – mr_sets metadata (authoritative SPSS MR definitions).
-    Pass 2 – columns sharing the same column label (same question, different options).
-    Pass 3 – columns whose resolved values are exclusively Checked / Unchecked,
-              grouped by shared label.
-
-    Returns
-    -------
-    groups : dict  { group_label : [col_name, ...] }
-        Each value list has >= 2 members and represents one multi-select question.
-    col_to_group : dict  { col_name : group_label }
-        Reverse lookup so the main loop can check membership quickly.
-    """
-
-    groups = {}  # label -> [cols]
-    col_to_group = {}  # col  -> label
+    groups = {}
+    col_to_group = {}
 
     # ----------------------------------------------------------
     # PASS 1: meta.mr_sets
@@ -173,9 +156,7 @@ def build_multi_select_groups(df, meta, col_label_map, value_label_map):
             var_list = mr_info.get("variable_list", [])
             if len(var_list) < 2:
                 continue
-            # Use the MR-set label if present, else the set name
             group_label = (mr_info.get("label") or set_name).strip()
-            # Resolve to actual df column names
             resolved = [v for v in var_list if v in df.columns]
             if len(resolved) < 2:
                 continue
@@ -190,23 +171,22 @@ def build_multi_select_groups(df, meta, col_label_map, value_label_map):
 
         if groups:
             print(f"  [MR detection] Pass 1 (mr_sets): {len(groups)} group(s) found")
-            return groups, col_to_group
+        # NO early return — fall through to Passes 2 and 3
 
     # ----------------------------------------------------------
-    # PASS 2: same column label  (>= 2 columns share identical label)
+    # PASS 2: same column label
     # ----------------------------------------------------------
     label_to_cols = {}
     for col, label in col_label_map.items():
         if col not in df.columns:
+            continue
+        if col in col_to_group:          # already claimed by Pass 1
             continue
         label_to_cols.setdefault(label, []).append(col)
 
     for label, cols in label_to_cols.items():
         if len(cols) < 2:
             continue
-        # Every member must look like a binary/dichotomous variable
-        # (<=4 unique non-null values) to avoid grouping genuinely
-        # different questions that happen to share a label.
         if all(_looks_binary(df[c], value_label_map.get(c, {})) for c in cols):
             key = label
             suffix = 0
@@ -222,13 +202,12 @@ def build_multi_select_groups(df, meta, col_label_map, value_label_map):
     # ----------------------------------------------------------
     CHECKED_LABELS = {"checked", "unchecked"}
     for col in df.columns:
-        if col in col_to_group:
+        if col in col_to_group:          # already claimed by Pass 1 or 2
             continue
         resolved_values = _resolved_values(df[col], value_label_map.get(col, {}))
         unique_lower = {str(v).strip().lower() for v in resolved_values if pd.notna(v)}
         if unique_lower and unique_lower.issubset(CHECKED_LABELS):
             label = col_label_map.get(col, col)
-            # Find any existing group that has a member with the same label
             matched_key = None
             for k, v_list in groups.items():
                 if col_label_map.get(v_list[0], v_list[0]) == label:
@@ -238,11 +217,10 @@ def build_multi_select_groups(df, meta, col_label_map, value_label_map):
                 groups[matched_key].append(col)
                 col_to_group[col] = matched_key
             else:
-                # Start a new tentative group (may be pruned below)
                 groups[label] = groups.get(label, []) + [col]
                 col_to_group[col] = label
 
-    # Prune single-member groups (can't be multi-select alone)
+    # Prune single-member groups
     to_remove = [k for k, v in groups.items() if len(v) < 2]
     for k in to_remove:
         for col in groups[k]:
@@ -250,12 +228,11 @@ def build_multi_select_groups(df, meta, col_label_map, value_label_map):
         del groups[k]
 
     if groups:
-        print(f"  [MR detection] Pass 2+3 (label inference): {len(groups)} group(s) found")
+        print(f"  [MR detection] All passes complete: {len(groups)} group(s) found")
     else:
         print(f"  [MR detection] No multi-select groups detected")
 
     return groups, col_to_group
-
 
 # Build the groups dict once, used throughout the rest of the pipeline
 if input_path.endswith(".sav"):
